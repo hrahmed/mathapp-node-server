@@ -3,3 +3,4 @@
 *.iml
 *.iws
 node_modules/
+data/
