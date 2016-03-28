@@ -1,0 +1,6 @@
+{"operations":[
+  {"id":"1", "operation":"add","symbol":"+"},
+  {"id":"2", "operation":"subtract","symbol":"-"},
+  {"id":"3", "operation":"multiply","symbol":"*"},
+  {"id":"4", "operation":"divide","symbol":"/"}
+]}

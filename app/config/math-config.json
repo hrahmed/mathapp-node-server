@@ -1,0 +1,8 @@
+{
+  "port": 8999,
+  "mongodb": {
+    "dbname": "nodemath",
+    "host": "localhost",
+    "port": 27017
+  }
+}

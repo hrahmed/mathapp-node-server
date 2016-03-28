@@ -1,0 +1,294 @@
+/**
+ * Created by ahmha02 on 16-03-04.
+ */
+// www.js
+
+// BASE SETUP
+// =============================================================================
+
+// call the packages we need
+var express    = require('express');        // call express
+var bodyParser = require('body-parser');
+var Config = require('config.json');
+
+var app        = express();                 // define our app using express
+
+// configure app to use bodyParser()
+// this will let us get the data from a POST
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+// Include Modules
+var simpleMathSync = require('../app/ops/simpleOpsSync');
+var simpleMathAsync = require('../app/ops/simpleOpsAsync');
+var Operation = require('../app/models/operations');
+var PerformanceData = require('../app/models/performanceData');
+var operation = new Operation();
+var performanceData = new PerformanceData();
+var configJson;
+
+// Get and set Config details
+var config = new Config('./app/config/math-config.json');
+var port = process.env.PORT || config.port;
+var mongoDbName = config.mongodb.dbname;
+var mongodbHost = config.mongodb.host;
+var mongodbPort = config.mongodb.port;
+var mongodbConnectionStatus = false;
+
+// connect to MongoDB database, in the event of an error ignore
+var mongoose   = require('mongoose');
+var mongoDb = null;
+var mongoUrl = 'mongodb://'+mongodbHost + ':' + mongodbPort + '/' + mongoDbName;
+mongoose.connect(mongoUrl, function (err, db){
+    if (err) {
+        mongodbConnectionStatus = false;
+        console.log('MongoDb connection failed, all MongoDb calls will be ingnored');
+    } else {
+        mongodbConnectionStatus = true;
+        mongoDb = db;
+        console.log('Connected to MongoDb on url ' + mongoUrl);
+    }
+});
+
+// Flush DB and insert Performance Schema
+var promise = require('../app/utilities/utilityPromise');
+var perfDataArray = [];
+
+promise.flushDb(PerformanceData) // Remove old documents from the db
+    .then(function() { // Read JSON filed
+        return promise.readFilePromise('app/config/PerformanceDataSchema.json', 'utf8');
+    })
+    .then(function(resJson) { // build array of JSON records
+        console.log(resJson);
+        resJson = JSON.parse(resJson);
+        for (var  i = 0; i < resJson.records.length; i++) {
+            perfDataArray.push(resJson.records[i]);
+        }
+        return perfDataArray;
+    })
+
+    .then(function(array) { // populate DB with JSON records from the array
+       promise.insertManyArrayToDB(PerformanceData, array);
+       console.log();
+    })
+    .then(function() {
+        console.log("PerformanceData records inserted");
+    })
+    .catch(function(err) {
+        console.log("Error inserting PerformanceData records");
+        console.log(err);
+    });
+
+/*
+// mongo testß
+var promise = require('../app/utilities/utilityPromise');
+promise.readFilePromise('math-operations.json', 'utf8')
+    .then (function(res){
+    // console.log(res);
+    return JSON.parse(res);
+})
+    .then (function(resJson){
+    configJson = resJson;
+    console.log(configJson);
+})
+
+    .then (function(){
+    promise.flushDb(Operation);
+})
+
+    .then (function(){
+    var res = promise.findRecords(Operation);
+})
+
+    .then (function(){
+    ops = new Operation;
+    for (var  i = 0; i < configJson.operations.length; i++) {
+        ops.id = configJson.operations[i].id;
+        ops.operation = configJson.operations[i].operation;
+        //promise.saveRecordToDb(ops);
+    }
+})
+
+    .then (function(){
+    promise.findRecords(Operation).valueOf();
+
+    Operation.find(function(err,res){
+        if (err) {
+
+        } else {
+            console.log('From DB' + res.valueOf());
+        }
+
+    });
+})
+
+    .catch (function(err){
+    throw err
+});
+*/
+
+/*promise.readJSON('math-operations.json')
+ .then (function(res){
+ console.log("res");
+ return res;
+ })
+ .catch (function(err){
+ throw err
+ });*/
+
+//Operation.remove({},function(err){
+//  console.log('operation flushed in mongodb');
+//var data = config.readJSON('math-operations.json');
+//console.log(data);
+//});
+
+/*Operation.remove({},function(err){
+ console.log('operation flushed in mongodb');
+
+ // Populate DB with operation data
+ var fs = require("fs");
+ var data = fs.readFileSync('math-operations.json','utf8');
+ data = JSON.parse(data);
+ console.log(data);
+ for(var  i = 0; i < data.operations.length; i++) {
+ ops.id = data.operations[i].id;
+ ops.operation = data.operations[i].operation;
+ console.log(ops.id);
+ ops.save(function(err) {
+ if (err)
+ console.log(err);
+
+ console.log(ops.id);
+ });
+ }
+ });*/
+
+
+
+// ROUTES FOR OUR API
+// =============================================================================
+var router = express.Router();              // get an instance of the express Router
+
+// middleware to use for all requests
+router.use(function(req, res, next) {
+    // do logging
+    //console.log('Something is happening.');
+    next(); // make sure we go to the next routes and don't stop here
+});
+
+
+// test route to make sure everything is working (accessed at GET http://localhost:8080/api)
+router.get('/', function(req, res) {
+    res.json({ message: 'hooray! welcome to our api!' });
+});
+
+// more routes for our API will happen here
+// ROUTES FOR OUR API
+// =============================================================================
+
+// more routes for our API will happen here
+
+// on routes that end in /math
+// ----------------------------------------------------
+router.route('/math')
+
+    // create a operation (accessed at POST http://localhost:8999/api/math)
+    .post(function(req, res) {
+
+        var operation = req.body.operation;
+        var value1 = parseInt(req.body.value1);
+        var value2 = parseInt(req.body.value2);
+        var response = -1;
+
+        if (operation == "add") {
+            response = simpleMathSync.add(value1, value2);
+            res.json({ message: "Post Operation for: " + operation + " Values are: " + value1 + " : " + value2 ,
+                "response" : response});
+
+        } else if (operation == "subtract") {
+            simpleMathAsync.subtract(value1, value2, function (response) {
+                res.json({
+                    message: "Post Operation for: " + operation + " Values are: " + value1 + " : " + value2,
+                    "response": response
+                });
+            });
+
+        } else if (operation == "multipy") {
+            simpleMathAsync.multiply(value1, value2, function (response) {
+                res.json({
+                    message: "Post Operation for: " + operation + " Values are: " + value1 + " : " + value2,
+                    "response": response
+                });
+            });
+
+        } else if (operation == "divide") {
+            simpleMathAsync.divide(value1, value2, function (response) {
+                res.json({
+                    message: "Post Operation for: " + operation + " Values are: " + value1 + " : " + value2,
+                    "response": response
+                });
+            });
+
+        } else if (operation == "sqrt") {
+            simpleMathAsync.sqrt(value1, function (response) {
+                res.json({
+                    message: "Post Operation for: " + operation + " Values are: " + value1,
+                    "response": response
+                });
+            });
+
+        } else {
+            console.log ("Illegal Operation: " + operation);
+            res.json({Message: "Illegal Operation: " + operation})
+        }
+
+        console.log("Post for: "+ req.body.toString());
+
+    })
+
+    .put(function(req, res) {
+
+        console.log("Put Operation is: " + req.body.operation + " Values are: " + req.body.value1 + " : " + req.body.value2);
+
+        res.json({ message: "Put Operation is: " + req.body.operation + " Values are: " + req.body.value1 + " : " + req.body.value2 });
+
+    })
+
+    .get(function(req, res) {
+
+        res.json({message:'Welcome to MathApp on Node.js'});
+
+    });
+
+router.route('/math/:operation_id')
+
+    // get the bear with that id (accessed at GET http://localhost:8999/api/math/:operation)
+    .get(function(req, res) {
+        console.log ('Math Operation Get is: ' + req.params.operation_id + ' for '+ req.body.value1);
+        res.json({ message: 'Math Operation Get is: ' + req.params.operation_id});
+    })
+
+    // update operation with this id (accessed at PUT http://localhost:8999/api/math/:add)
+    .put(function(req, res) {
+        var value1 = req.body.value1;
+        var value2 = req.body.value2;
+        console.log ('Math Operation Put is: ' + req.body.operation_id +' for: '+ value1 + ' : ' + value2);
+        res.json({ message: 'Math Operation Put is: ' + req.body.operation_id +' for: '+ value1 + ' : ' + value2});
+    })
+
+    // delete the bear with this id (accessed at DELETE http://localhost:8999/api/bears/:bear_id)
+    .delete(function(req, res) {
+        res.json({ message: 'Math Operation Delete is: ' + req.params.operation_id});
+    });
+
+
+
+
+// REGISTER OUR ROUTES -------------------------------
+// all of our routes will be prefixed with /api
+app.use('/api', router);
+
+// START THE SERVER
+// =============================================================================
+app.listen(port);
+console.log('MathApp Node Server listening on port ' + port);
