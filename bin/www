@@ -42,7 +42,7 @@ var mongoUrl = 'mongodb://'+mongodbHost + ':' + mongodbPort + '/' + mongoDbName;
 mongoose.connect(mongoUrl, function (err, db){
     if (err) {
         mongodbConnectionStatus = false;
-        console.log('MongoDb connection failed, all MongoDb calls will be ingnored');
+        console.log('MongoDb connection failed, all MongoDb calls will be ignored');
     } else {
         mongodbConnectionStatus = true;
         mongoDb = db;
@@ -80,7 +80,7 @@ promise.flushDb(PerformanceData) // Remove old documents from the db
     });
 
 /*
-// mongo testß
+// mongo test
 var promise = require('../app/utilities/utilityPromise');
 promise.readFilePromise('math-operations.json', 'utf8')
     .then (function(res){
@@ -202,61 +202,90 @@ router.route('/math')
 
         if (operation == "add") {
             response = simpleMathSync.add(value1, value2);
-            res.json({ message: "Post Operation for: " + operation + " Values are: " + value1 + " : " + value2 ,
-                "response" : response});
+            res.json({"response" : response});
 
         } else if (operation == "subtract") {
             simpleMathAsync.subtract(value1, value2, function (response) {
-                res.json({
-                    message: "Post Operation for: " + operation + " Values are: " + value1 + " : " + value2,
-                    "response": response
+                res.json({"response": response
                 });
             });
 
-        } else if (operation == "multipy") {
+        } else if (operation == "multiply") {
             simpleMathAsync.multiply(value1, value2, function (response) {
-                res.json({
-                    message: "Post Operation for: " + operation + " Values are: " + value1 + " : " + value2,
-                    "response": response
+                res.json({"response": response
                 });
             });
 
         } else if (operation == "divide") {
             simpleMathAsync.divide(value1, value2, function (response) {
-                res.json({
-                    message: "Post Operation for: " + operation + " Values are: " + value1 + " : " + value2,
-                    "response": response
+                res.json({"response": response
                 });
             });
 
         } else if (operation == "sqrt") {
             simpleMathAsync.sqrt(value1, function (response) {
-                res.json({
-                    message: "Post Operation for: " + operation + " Values are: " + value1,
-                    "response": response
+                res.json({"response": response
                 });
             });
 
         } else {
             console.log ("Illegal Operation: " + operation);
-            res.json({Message: "Illegal Operation: " + operation})
+            res.json({message: "Illegal Operation: " + operation})
         }
 
-        console.log("Post for: "+ req.body.toString());
+        console.log("Post for: "+ JSON.stringify(req.body, null, 4));
 
     })
 
     .put(function(req, res) {
 
-        console.log("Put Operation is: " + req.body.operation + " Values are: " + req.body.value1 + " : " + req.body.value2);
-
-        res.json({ message: "Put Operation is: " + req.body.operation + " Values are: " + req.body.value1 + " : " + req.body.value2 });
+        res.json({ message: "Put Operation not supported for MathApp" });
 
     })
 
     .get(function(req, res) {
 
-        res.json({message:'Welcome to MathApp on Node.js'});
+        var operation = req.query.operation;
+        var value1 = parseInt(req.query.value1);
+        var value2 = parseInt(req.query.value2);
+        var response = -1;
+
+        if (operation == "add") {
+            response = simpleMathSync.add(value1, value2);
+            res.json({"response": response, responsecode:1 });
+
+        } else if (operation == "subtract") {
+            simpleMathAsync.subtract(value1, value2, function (response) {
+                res.json({"response": response, responsecode:1 });
+            });
+
+        } else if (operation == "multiply") {
+            simpleMathAsync.multiply(value1, value2, function (response) {
+                res.json({"response": response, responsecode:1 });
+
+            });
+
+        } else if (operation == "divide") {
+            simpleMathAsync.divide(value1, value2, function (response) {
+                res.json({"response": response, responsecode:1 });
+
+            });
+
+
+        } else if (operation == "sqrt") {
+            simpleMathAsync.sqrt(value1, function (response) {
+                res.json({"response": response, responsecode:1 });
+
+            });
+
+        } else {
+            console.log ("Illegal Operation: " + operation);
+            res.json({message: "Illegal Operation: " + operation, responsecode: -1});
+        }
+
+
+        //res.json({message:'Welcome to MathApp on Node.js'});
+        //res.json({ message: "Get Operation is: " + req.query.operation + " Values are: " + req.query.value1 + " : " + req.query.value2 });
 
     });
 
