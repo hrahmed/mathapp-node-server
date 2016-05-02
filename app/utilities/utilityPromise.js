@@ -73,6 +73,25 @@ module.exports = {
         });
     },
 
+    updateRecord: function (schema, key, keyValue, updateKey, updateValue) {
+        return new Promise(function (fulfill, reject) {
+            console.log(schema + ',' + key + ',' +  keyValue + ',' +  updateKey +',' +  updateValue);
+            schema.update({ id: keyValue }, { updateKey: updateValue }, function (err, res) {
+                if (err) {
+                    console.log("Reject updateRecord promise");
+                    console.log(err.valueOf());
+                    reject(err);
+                }
+                else {
+                    console.log("Fulfill updateRecord promise");
+                    console.log(res.valueOf());
+                    fulfill(res);
+                }
+
+            });
+        });
+    },
+
     insertManyArrayToDB: function (schema, array) {
         return new Promise(function (fulfill, reject) {
             schema.insertMany(array, function (err, res) {

@@ -4,6 +4,7 @@ https://scotch.io/tutorials/build-a-restful-api-using-node-and-express-4
 
 https://docs.mongodb.org/manual/reference/mongo-shell/
 
+
 MongoDB commands:
 mongod --dbpath .../data
 mongo
@@ -24,6 +25,13 @@ db.usercollection.insert(opdata);
 // list items from operations schema
 db.operations.find()
 
+//get performance counters
+db.performancedatas.find()
 
 Promises:
 https://www.promisejs.org
+
+start with wily:
+ca-apm-run ./bin/wwww
+
+

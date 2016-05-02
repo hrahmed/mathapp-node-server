@@ -3,5 +3,6 @@
   { "id": 2, "operation": "subtract", "counter": 0 },
   { "id": 3, "operation": "multiply", "counter": 0 },
   { "id": 4, "operation": "divide", "counter": 0 },
-  { "id": 5, "operation": "sqrt", "counter": 0 }
+  { "id": 5, "operation": "sqrt", "counter": 0 },
+  { "id": -1, "operation": "unknown", "counter": 0 }
 ]}
