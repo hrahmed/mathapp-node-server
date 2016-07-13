@@ -20,10 +20,10 @@
   ca-apm-run ./bin/www
 
 ### Rest URLs
-  GET:
-    *http://localhost:8999/api/math?operation=add&value1=25&value2=99
-    *http://localhost:8999/api/math?operation=multiply&value1=25&value2=99
-    *http://localhost:8999/api/math?operation=sqrt&value1=25
+...GET:..
+ ..*http://localhost:8999/api/math?operation=add&value1=25&value2=99
+ ..*http://localhost:8999/api/math?operation=multiply&value1=25&value2=99
+ ..*http://localhost:8999/api/math?operation=sqrt&value1=25
 
 
 
